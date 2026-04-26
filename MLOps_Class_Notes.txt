@@ -2682,3 +2682,404 @@ Next :::
 	- Kubeflow 
 	
 	- Monitoring 
+
+
+
+######################
+Day-9 | 26th Apr. 2026
+######################				
+			
+	- Deployment to Kubernetes :::
+	
+	
+	Kubernetes Objects ::::
+	
+		Kubernetes Pods 
+		Kubernetes Deployments 
+		Kubernetes Service 	
+		
+		Kubernetes Namespaces 		# It is the logical partition of the Kubernetes Cluster 
+									# Based on the Environments/Application Teams Namespace can be created.
+									
+					Kubernetes_Master
+						WN1,2,3,4,5,6,7,8,9
+						
+					Kubernetes_Master
+						WN1,2,3,4,5,6,7,8,9
+						
+					Kubernetes_Master
+						WN1,2,3,4,5,6,7,8,9
+
+		Kubernetes Service ::::
+		
+			- Kubernetes ClusterIP 			# To enable internal Pod Communication
+			
+			- Kubernetes NodePort Service 	# used to Expose the Pods to Internet
+											# Expose the Pod using Nodeport Service 
+											#	- This will create a NodePort Service 
+												- 30000 - 32767
+												
+											# used <External_Ip>:<Node_port>
+			
+			- Load Balancer		# 3rd party service - AWS 
+			
+			
+		Kubernetes Deployments 	::::
+			
+			
+			
+Kubernetes Clusters :	
+			
+			Non-Environments :
+			
+				- Dev 
+				
+				- QA 
+				
+				- UAT 
+
+Kubernetes Clusters : 24/7 - LIVE Environment
+			
+			Production Environments :	
+			
+				- Prod 
+		
+		
+	
+	Deploy the Kubernetes Pods using Deployment Controller Object :::
+	
+	
+	Controller Object :::
+		ReplicaSet 
+		Deployment 
+
+
+	ReplicaSet :::
+	
+		--> Replicaset is used to execute the specific no. of pods in the cluster.
+		--> Replicaset uses the Set Based Operator
+		--> Used to replicate the pods and able to scale up/down
+		--> The Replicasets will be automatically created, while creating Deployment Controller Object.
+	
+	Deployment Controller Object :::
+	
+		--> It is used to deploy the pods and ensure high availability of pods by creating pod replicas 
+		--> 1. Create Muliple instance/replicas/copies of pods 
+			2. Used to Scale-Up / Scale-Down the Pods 
+			3. Used to Upgrade the application pods 
+			4. Used to Down-grade/roll-back the application pods
+		--> The upgrade/down-grade of application pods can be done without any downtime. 
+		--> To achieve zero-downtime during upgrade/down-grade, By Default, it used Rolling-Update Deployment Strategy.
+					
+
+		Deployment Object 
+		ReplicaSet Object 
+		Pod Object 
+	
+		
+		
+		
+		- Replicas of Pods :		upgrade/down-grade, By Default, it used Rolling-Update Deployment Strategy.
+			
+			app_img:V1.0				==> 		app_img:V2.0		
+		
+			pod1.1 ==> app_img:V1.0		==> 		app_img:V2.0
+			
+			pod1.2 ==> app_img:V1.0		==> 		app_img:V2.0	
+		
+			pod1.3 ==> app_img:V1.0		==> 		app_img:V2.0
+			
+			
+	
+# k8s/api-deployment.yaml
+		
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: loksai-api-deploy
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: api
+  template:
+    metadata:
+      labels:
+        app: api
+    spec:
+      containers:
+      - name: api
+        image: loksaieta/loksai-mlops830api:latest
+        ports:
+        - containerPort: 8000
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: loksai-api-svc
+spec:
+  selector:
+    app: api
+  ports:
+  - port: 8000
+    targetPort: 8000			
+			
+			
+	
+	
+	- Github-Actions :
+	
+		- Runners : 
+			- GitHub Managed Runner 
+			- Self-Managed Runner 
+			
+	
+	
+	Deploy using Kubernetes 
+	
+		1. Launch a Target Server / Kubernetes Cluster & Attach IAM Role for S3.
+		2. Open all the required ports 
+		3. Login and Install the required packages
+				- Docker / K3s/Minikube/Kubeadm 
+
+
+			Use AWS Ubuntu - 22.04V AMI 
+			
+			- sudo -i 
+			
+			- apt update -y  
+			
+			- curl -sfL https://get.k3s.io | sh -
+			
+			- sudo systemctl status k3s
+			
+			- kubectl get nodes 
+
+			
+				- Install unzip utility / curl 
+				
+				- Install aws-cli 
+				
+sudo -i
+
+apt install unzip curl
+
+✅ METHOD 1 — Install AWS CLI v2 (Recommended)
+
+AWS CLI v2 is the latest, stable version.
+
+✔ Step 1 — Download the installer
+cd /tmp
+curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+
+✔ Step 2 — Unzip
+sudo apt install -y unzip
+unzip awscliv2.zip
+
+✔ Step 3 — Install
+sudo ./aws/install
+
+✔ Step 4 — Verify
+aws --version
+
+
+You should see something like:
+
+aws-cli/2.18.x Python/3.x.x Linux/x86_64
+
+					
+		4. Setup the Credentials:
+			- Create linux user - devopsadminuser1
+				- valid Credentials - 
+					 Recommended to have ssh-key - public_Key & Private Keys 
+
+#Add User : 
+
+useradd devopsadmin -s /bin/bash -m -d /home/devopsadmin
+
+su - devopsadmin
+
+#ssh-keygen
+
+#for Ubuntu ::
+#ssh-keygen -t rsa -b 2048 -m PEM								#ubuntu 20.04
+
+ssh-keygen -t ecdsa -b 521										#ubuntu 22.04 or higher version of ubuntu				
+
+
+ls ~/.ssh 
+
+#You should see following two files:
+
+#id_ecdsa - private key
+#id_ecdsa.pub - public
+
+
+#cat id_rsa.pub > authorized_keys
+
+cat id_ecdsa.pub > authorized_keys
+
+chmod 600 /home/devopsadmin/.ssh/*
+
+					 
+				- Enable user access to kubernetes Master 
+				
+					- Create .kube/config under user's home dir. 
+					- Use this user's kube/config file content as token for Authentication on github runner.
+					
+					
+					cat /home/devopsadmin/.kube/config 
+					
+		5. Setup github self-hosted action-runner
+		
+			- Goto the Repo level setting 
+			- Actions -> Runner 
+			- Create Runner based on the OS & follow the instructions. 	
+	
+Deploy to Kubernetes :::
+
+
+		K3s			# https://docs.k3s.io/installation
+		
+		Setup Kubernetes Sigle Cluster & Update it as a github-actions self hosted runner
+		
+		- Launch EC2 Instance 
+		
+		
+		- Install K3s 
+		
+		Github-Actions :::::
+	
+	Automate the Model Creation and Containerization using CICD Workflow - github-actions workflow.
+	
+	Setup-self-hosted Agent on github
+	
+		- Build_Server 
+		- Deployment Server 
+	
+	Deploy using Kubernetes 
+	
+		1. Launch a Target Server / Kubernetes Cluster & Attach IAM Role for S3.
+		2. Open all the required ports 
+		3. Login and Install the required packages
+				- Docker / K3s/Minikube/Kubeadm 
+
+
+			Use AWS Ubuntu - 22.04V AMI 
+			
+			- sudo -i 
+			
+			- apt update -y  
+			
+			- curl -sfL https://get.k3s.io | sh -
+			
+			- sudo systemctl status k3s
+			
+			- kubectl get nodes 
+
+			
+				- Install unzip utility / curl 
+				
+				- Install aws-cli 
+				
+sudo -i
+
+apt install unzip curl
+
+✅ METHOD 1 — Install AWS CLI v2 (Recommended)
+
+AWS CLI v2 is the latest, stable version.
+
+✔ Step 1 — Download the installer
+cd /tmp
+curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+
+✔ Step 2 — Unzip
+sudo apt install -y unzip
+unzip awscliv2.zip
+
+✔ Step 3 — Install
+sudo ./aws/install
+
+✔ Step 4 — Verify
+aws --version
+
+
+You should see something like:
+
+aws-cli/2.18.x Python/3.x.x Linux/x86_64
+
+					
+		4. Setup the Credentials:
+			- Create linux user - devopsadminuser
+				- valid Credentials - 
+					 Recommended to have ssh-key - public_Key & Private Keys 
+
+#Add User : 
+
+useradd devopsadmin -s /bin/bash -m -d /home/devopsadmin
+
+su - devopsadmin
+
+#ssh-keygen
+
+#for Ubuntu ::
+#ssh-keygen -t rsa -b 2048 -m PEM								#ubuntu 20.04
+
+ssh-keygen -t ecdsa -b 521										#ubuntu 22.04 or higher version of ubuntu				
+
+
+ls ~/.ssh 
+
+#You should see following two files:
+
+#id_ecdsa - private key
+#id_ecdsa.pub - public
+
+
+#cat id_rsa.pub > authorized_keys
+
+cat id_ecdsa.pub > authorized_keys
+
+chmod 600 /home/devopsadmin/.ssh/*
+
+					 
+				- Enable user access to kubernetes Master 
+				
+					- Create .kube/config under user's home dir. 
+					- Use this user's kube/config file content as token for Authentication on github runner.
+
+root: visudo 
+					
+devopsadmin ALL=(ALL) NOPASSWD: ALL
+
+save & exit
+
+su - devopsadmin
+
+mkdir -p $HOME/.kube
+sudo cp /etc/rancher/k3s/k3s.yaml $HOME/.kube/config
+sudo chown $USER:$USER $HOME/.kube/config
+
+export KUBECONFIG=$HOME/.kube/config
+echo 'export KUBECONFIG=$HOME/.kube/config' >> ~/.bashrc
+
+kubectl get nodes
+										
+cat /home/devopsadmin/.kube/config 			# create Repository Secret in pipeline
+
+					
+		5. Setup github self-hosted action-runner
+		
+			- Goto the Repo level setting 
+			- Actions -> Runner 
+			- Create Runner based on the OS & follow the instructions. 
+			
+			
+Next:::
+	
+	- Kubeflow to Deploy 
+	
+	- Monitoring 
+			
+	- AWS SageMaker-ai		
